@@ -1,19 +1,19 @@
 const express = require("express");
 const cors = require("cors");
-const snippetRoutes = require("./routes/snippets");
+const snippetsRoutes = require("./routes/snippets");
 
 const app = express();
-const PORT = 3000;
+const PORT = 5000;
 
 app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Snippet-Vault Backend Server");
+  res.send("Snippet-Vault API Server is running");
 });
 
-app.use("/snippets", snippetRoutes);
+app.use("/snippets", snippetsRoutes);
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
