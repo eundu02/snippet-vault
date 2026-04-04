@@ -38,7 +38,11 @@ function SnippetCard({ snippet }) {
       </pre>
 
       <div className="snippet-card-actions">
-        <button type="button" className="secondary-btn" onClick={handleMoveDetail}>
+        <button
+          type="button"
+          className="secondary-btn"
+          onClick={handleMoveDetail}
+        >
           상세보기
         </button>
         <button type="button" onClick={handleCopy}>

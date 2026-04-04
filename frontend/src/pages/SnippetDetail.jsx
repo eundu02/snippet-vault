@@ -42,21 +42,46 @@ function SnippetDetail() {
   };
 
   if (loading) {
-    return <div className="app-container"><div className="status-box">상세 정보를 불러오는 중입니다...</div></div>;
+    return (
+      <div className="app-container">
+        <div className="status-box">상세 정보를 불러오는 중입니다...</div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="app-container"><div className="error-box">{error}</div></div>;
+    return (
+      <div className="app-container">
+        <div className="error-box">{error}</div>
+        <div className="detail-top-bar">
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={handleMoveBack}
+          >
+            목록으로
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (!snippet) {
-    return <div className="app-container"><div className="status-box">스니펫 정보를 찾을 수 없습니다.</div></div>;
+    return (
+      <div className="app-container">
+        <div className="status-box">스니펫 정보를 찾을 수 없습니다.</div>
+      </div>
+    );
   }
 
   return (
     <div className="app-container">
       <div className="detail-top-bar">
-        <button type="button" className="secondary-btn" onClick={handleMoveBack}>
+        <button
+          type="button"
+          className="secondary-btn"
+          onClick={handleMoveBack}
+        >
           목록으로
         </button>
       </div>
