@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchLanguages, fetchSnippets } from "../api";
 import FilterBar from "../components/FilterBar";
 import SnippetList from "../components/SnippetList";
 
 function Home() {
+  const navigate = useNavigate();
+
   const [snippets, setSnippets] = useState([]);
   const [languages, setLanguages] = useState([]);
 
@@ -69,11 +72,23 @@ function Home() {
     setAppliedLanguage("");
   };
 
+  const handleMoveCreate = () => {
+    navigate("/snippets/new");
+  };
+
   return (
     <div className="app-container">
       <header className="page-header">
-        <h1>Snippet Vault</h1>
-        <p>자주 사용하는 코드 스니펫을 검색하고 관리하는 공간</p>
+        <div className="page-header-row">
+          <div>
+            <h1>Snippet Vault</h1>
+            <p>자주 사용하는 코드 스니펫을 검색하고 관리하는 공간</p>
+          </div>
+
+          <button type="button" onClick={handleMoveCreate}>
+            + 스니펫 추가
+          </button>
+        </div>
       </header>
 
       <FilterBar

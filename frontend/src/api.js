@@ -60,3 +60,21 @@ export const deleteSnippetById = async (id) => {
 
   return result;
 };
+
+export const createSnippet = async (payload) => {
+  const response = await fetch(`${BASE_URL}/snippets`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.message || "Failed to create snippet");
+  }
+
+  return result.data;
+};
