@@ -1,7 +1,7 @@
 const snippetsModel = require("../models/snippetsModel");
 
 const getAllSnippets = async ({ keyword, language_id }) => {
-  return await snippetsModel.getAllSnippets({ keyword, language_id });
+  return await snippetsModel.getAllSnippets(keyword, language_id);
 };
 
 const getSnippetById = async (id) => {
@@ -50,3 +50,4 @@ module.exports = {
   updateSnippet,
   deleteSnippet,
 };
+
