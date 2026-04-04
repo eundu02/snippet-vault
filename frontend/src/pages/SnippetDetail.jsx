@@ -33,6 +33,10 @@ function SnippetDetail() {
     navigate("/");
   };
 
+  const handleMoveEdit = () => {
+    navigate(`/snippets/${id}/edit`);
+  };
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(snippet?.code || "");
@@ -136,6 +140,7 @@ function SnippetDetail() {
           <button
             type="button"
             className="secondary-btn"
+            onClick={handleMoveEdit}
             disabled={deleteLoading}
           >
             수정
