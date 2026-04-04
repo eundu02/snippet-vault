@@ -36,3 +36,6 @@ coverage/
 
 # VSCode test
 .vscode-test
+
+# Database files
+database/*.db

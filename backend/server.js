@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const snippetsRoutes = require("./routes/snippets");
+const languagesRoutes = require("./routes/languages");
 
 const app = express();
 const PORT = 5000;
@@ -13,6 +14,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/snippets", snippetsRoutes);
+app.use("/languages", languagesRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
