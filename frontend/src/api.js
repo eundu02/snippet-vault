@@ -78,3 +78,21 @@ export const createSnippet = async (payload) => {
 
   return result.data;
 };
+
+export const updateSnippetById = async (id, payload) => {
+  const response = await fetch(`${BASE_URL}/snippets/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.message || "Failed to update snippet");
+  }
+
+  return result.data;
+};
