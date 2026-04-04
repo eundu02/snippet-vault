@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchSnippetById } from "../api";
+import { fetchSnippetById, deleteSnippetById } from "../api";
 
 function SnippetDetail() {
   const { id } = useParams();
@@ -8,6 +8,7 @@ function SnippetDetail() {
 
   const [snippet, setSnippet] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -38,6 +39,31 @@ function SnippetDetail() {
       alert("코드가 복사되었습니다.");
     } catch (error) {
       alert("복사에 실패했습니다.");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!snippet) {
+      return;
+    }
+
+    const isConfirmed = window.confirm(
+      `"${snippet.title}" 스니펫을 삭제하시겠습니까?`
+    );
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(true);
+      await deleteSnippetById(id);
+      alert("스니펫이 삭제되었습니다.");
+      navigate("/");
+    } catch (err) {
+      alert(err.message || "삭제에 실패했습니다.");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -103,14 +129,25 @@ function SnippetDetail() {
         </pre>
 
         <div className="snippet-card-actions">
-          <button type="button" onClick={handleCopy}>
+          <button type="button" onClick={handleCopy} disabled={deleteLoading}>
             복사
           </button>
-          <button type="button" className="secondary-btn">
+
+          <button
+            type="button"
+            className="secondary-btn"
+            disabled={deleteLoading}
+          >
             수정
           </button>
-          <button type="button" className="danger-btn">
-            삭제
+
+          <button
+            type="button"
+            className="danger-btn"
+            onClick={handleDelete}
+            disabled={deleteLoading}
+          >
+            {deleteLoading ? "삭제 중..." : "삭제"}
           </button>
         </div>
       </div>

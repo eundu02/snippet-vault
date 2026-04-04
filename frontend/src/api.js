@@ -46,3 +46,17 @@ export const fetchSnippetById = async (id) => {
 
   return result.data;
 };
+
+export const deleteSnippetById = async (id) => {
+  const response = await fetch(`${BASE_URL}/snippets/${id}`, {
+    method: "DELETE",
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.message || "Failed to delete snippet");
+  }
+
+  return result;
+};
