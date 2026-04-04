@@ -1,4 +1,4 @@
-const successResponse = (res, statusCode, data = null, message = "Success") => {
+const successResponse = (res, message, data = null, statusCode = 200) => {
   return res.status(statusCode).json({
     success: true,
     message,
@@ -6,7 +6,7 @@ const successResponse = (res, statusCode, data = null, message = "Success") => {
   });
 };
 
-const errorResponse = (res, statusCode, message = "Error") => {
+const errorResponse = (res, message = "Internal Server Error", statusCode = 500) => {
   return res.status(statusCode).json({
     success: false,
     message,

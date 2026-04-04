@@ -1,14 +1,27 @@
 const snippetsModel = require("../models/snippetsModel");
 
-const getAllSnippets = async ({ keyword, language_id }) => {
-  return await snippetsModel.getAllSnippets(keyword, language_id);
+const getAllSnippets = async (keyword, language_id) => {
+  const snippets = await snippetsModel.getAllSnippets(keyword, language_id);
+  return snippets;
 };
 
 const getSnippetById = async (id) => {
-  return await snippetsModel.getSnippetById(id);
+  const snippet = await snippetsModel.getSnippetById(id);
+
+  if (!snippet) {
+    throw new Error("Snippet not found");
+  }
+
+  return snippet;
 };
 
-const createSnippet = async ({ title, code, description, language_id }) => {
+const createSnippet = async (snippetData) => {
+  const { title, code, description, language_id } = snippetData;
+
+  if (!title || !code) {
+    throw new Error("Title and code are required");
+  }
+
   return await snippetsModel.createSnippet({
     title,
     code,
@@ -17,30 +30,47 @@ const createSnippet = async ({ title, code, description, language_id }) => {
   });
 };
 
-const updateSnippet = async ({ id, title, code, description, language_id }) => {
+const updateSnippet = async (id, snippetData) => {
   const existingSnippet = await snippetsModel.findSnippetById(id);
 
   if (!existingSnippet) {
-    return null;
+    throw new Error("Snippet not found");
   }
 
-  return await snippetsModel.updateSnippet({
-    id,
+  const { title, code, description, language_id } = snippetData;
+
+  if (!title || !code) {
+    throw new Error("Title and code are required");
+  }
+
+  const result = await snippetsModel.updateSnippet(id, {
     title,
     code,
     description,
     language_id,
   });
+
+  if (result.changes === 0) {
+    throw new Error("Snippet update failed");
+  }
+
+  return await snippetsModel.getSnippetById(id);
 };
 
 const deleteSnippet = async (id) => {
   const existingSnippet = await snippetsModel.findSnippetById(id);
 
   if (!existingSnippet) {
-    return null;
+    throw new Error("Snippet not found");
   }
 
-  return await snippetsModel.deleteSnippet(id);
+  const result = await snippetsModel.deleteSnippet(id);
+
+  if (result.changes === 0) {
+    throw new Error("Snippet delete failed");
+  }
+
+  return { id: Number(id) };
 };
 
 module.exports = {
@@ -50,4 +80,3 @@ module.exports = {
   updateSnippet,
   deleteSnippet,
 };
-
