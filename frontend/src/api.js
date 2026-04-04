@@ -1,0 +1,37 @@
+const BASE_URL = "http://localhost:5000";
+
+export const fetchSnippets = async ({ keyword = "", languageId = "" } = {}) => {
+  const query = new URLSearchParams();
+
+  if (keyword.trim()) {
+    query.append("keyword", keyword.trim());
+  }
+
+  if (languageId) {
+    query.append("language_id", languageId);
+  }
+
+  const url = query.toString()
+    ? `${BASE_URL}/snippets?${query.toString()}`
+    : `${BASE_URL}/snippets`;
+
+  const response = await fetch(url);
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.message || "Failed to fetch snippets");
+  }
+
+  return Array.isArray(result.data) ? result.data : [];
+};
+
+export const fetchLanguages = async () => {
+  const response = await fetch(`${BASE_URL}/languages`);
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.message || "Failed to fetch languages");
+  }
+
+  return Array.isArray(result.data) ? result.data : [];
+};
