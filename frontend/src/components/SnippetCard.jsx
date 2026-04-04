@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 function SnippetCard({ snippet }) {
+  const navigate = useNavigate();
+
   if (!snippet) {
     return null;
   }
@@ -10,7 +14,11 @@ function SnippetCard({ snippet }) {
     } catch (error) {
       alert("복사에 실패했습니다.");
     }
-  };    
+  };
+
+  const handleMoveDetail = () => {
+    navigate(`/snippets/${snippet.id}`);
+  };
 
   return (
     <div className="snippet-card">
@@ -30,7 +38,12 @@ function SnippetCard({ snippet }) {
       </pre>
 
       <div className="snippet-card-actions">
-        <button onClick={handleCopy}>복사</button>
+        <button type="button" className="secondary-btn" onClick={handleMoveDetail}>
+          상세보기
+        </button>
+        <button type="button" onClick={handleCopy}>
+          복사
+        </button>
       </div>
     </div>
   );
