@@ -38,4 +38,5 @@ coverage/
 .vscode-test
 
 # Database files
-database/*.db
+*.db
+backend/database/*.db
