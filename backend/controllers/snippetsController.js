@@ -1,113 +1,86 @@
 const snippetsService = require("../services/snippetsService");
 const { successResponse, errorResponse } = require("../utils/response");
 
-// 전체 조회 + 검색 + 언어 필터
 const getAllSnippets = async (req, res) => {
   try {
-    const { keyword, language_id } = req.query;
+    const { keyword, language_id } = req.query || {};
+    const snippets = await snippetsService.getAllSnippets(keyword, language_id);
 
-    const snippets = await snippetsService.getAllSnippets({
-      keyword,
-      language_id,
-    });
-
-    return successResponse(res, 200, snippets, "Snippets fetched successfully");
+    return successResponse(res, "Snippets fetched successfully", snippets);
   } catch (error) {
     console.error("GET /snippets error:", error.message);
-    return errorResponse(res, 500, "Failed to fetch snippets");
+    return errorResponse(res, "Failed to fetch snippets", 500);
   }
 };
 
-// 단건 조회
 const getSnippetById = async (req, res) => {
   try {
     const { id } = req.params;
-
     const snippet = await snippetsService.getSnippetById(id);
 
-    if (!snippet) {
-      return errorResponse(res, 404, "Snippet not found");
+    return successResponse(res, "Snippet fetched successfully", snippet);
+  } catch (error) {
+    console.error(`GET /snippets/${req.params.id} error:`, error.message);
+
+    if (error.message === "Snippet not found") {
+      return errorResponse(res, error.message, 404);
     }
 
-    return successResponse(res, 200, snippet, "Snippet fetched successfully");
-  } catch (error) {
-    console.error("GET /snippets/:id error:", error.message);
-    return errorResponse(res, 500, "Failed to fetch snippet");
+    return errorResponse(res, "Failed to fetch snippet", 500);
   }
 };
 
-// 생성
 const createSnippet = async (req, res) => {
   try {
-    const { title, code, description, language_id } = req.body;
+    const createdSnippet = await snippetsService.createSnippet(req.body);
 
-    if (!title || !code) {
-      return errorResponse(res, 400, "title and code are required");
-    }
-
-    const result = await snippetsService.createSnippet({
-      title,
-      code,
-      description,
-      language_id,
-    });
-
-    return successResponse(
-      res,
-      201,
-      { id: result.id },
-      "Snippet created successfully"
-    );
+    return successResponse(res, "Snippet created successfully", createdSnippet, 201);
   } catch (error) {
     console.error("POST /snippets error:", error.message);
-    return errorResponse(res, 500, "Failed to create snippet");
+
+    if (error.message === "Title and code are required") {
+      return errorResponse(res, error.message, 400);
+    }
+
+    return errorResponse(res, "Failed to create snippet", 500);
   }
 };
 
-// 수정
 const updateSnippet = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, code, description, language_id } = req.body;
+    const updatedSnippet = await snippetsService.updateSnippet(id, req.body);
 
-    if (!title || !code) {
-      return errorResponse(res, 400, "title and code are required");
-    }
-
-    const result = await snippetsService.updateSnippet({
-      id,
-      title,
-      code,
-      description,
-      language_id,
-    });
-
-    if (!result) {
-      return errorResponse(res, 404, "Snippet not found");
-    }
-
-    return successResponse(res, 200, null, "Snippet updated successfully");
+    return successResponse(res, "Snippet updated successfully", updatedSnippet);
   } catch (error) {
-    console.error("PUT /snippets/:id error:", error.message);
-    return errorResponse(res, 500, "Failed to update snippet");
+    console.error(`PUT /snippets/${req.params.id} error:`, error.message);
+
+    if (error.message === "Snippet not found") {
+      return errorResponse(res, error.message, 404);
+    }
+
+    if (error.message === "Title and code are required") {
+      return errorResponse(res, error.message, 400);
+    }
+
+    return errorResponse(res, "Failed to update snippet", 500);
   }
 };
 
-// 삭제
 const deleteSnippet = async (req, res) => {
   try {
     const { id } = req.params;
-
     const result = await snippetsService.deleteSnippet(id);
 
-    if (!result) {
-      return errorResponse(res, 404, "Snippet not found");
+    return successResponse(res, "Snippet deleted successfully", result);
+  } catch (error) {
+    console.error(`DELETE /snippets/${req.params.id} error:`, error.message);
+
+    if (error.message === "Snippet not found") {
+      return errorResponse(res, error.message, 404);
     }
 
-    return successResponse(res, 200, null, "Snippet deleted successfully");
-  } catch (error) {
-    console.error("DELETE /snippets/:id error:", error.message);
-    return errorResponse(res, 500, "Failed to delete snippet");
+    return errorResponse(res, "Failed to delete snippet", 500);
   }
 };
 
