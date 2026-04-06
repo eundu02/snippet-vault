@@ -1,60 +1,35 @@
 const tagsModel = require("../models/tagsModel");
-const snippetsModel = require("../models/snippetsModel");
 
 const getAllTags = async () => {
-  const tags = await tagsModel.getAllTags();
-  return tags;
+  return await tagsModel.getAllTags();
 };
 
-const createTag = async (tagData) => {
-  const { name } = tagData;
-
-  if (!name || !name.trim()) {
-    throw new Error("Tag name is required");
-  }
-
-  const trimmedName = name.trim();
-
-  const existingTag = await tagsModel.getTagByName(trimmedName);
-  if (existingTag) {
-    throw new Error("Tag already exists");
-  }
-
-  const createdTag = await tagsModel.createTag(trimmedName);
-  return createdTag;
+const createTag = async (name) => {
+  return await tagsModel.createTag(name);
 };
 
 const getTagsBySnippetId = async (snippetId) => {
-  const snippet = await snippetsModel.findSnippetById(snippetId);
-
-  if (!snippet) {
-    throw new Error("Snippet not found");
-  }
-
-  const tags = await tagsModel.getTagsBySnippetId(snippetId);
-  return tags;
+  return await tagsModel.getTagsBySnippetId(snippetId);
 };
 
 const addTagToSnippet = async (snippetId, tagId) => {
-  const snippet = await snippetsModel.findSnippetById(snippetId);
-  if (!snippet) {
-    throw new Error("Snippet not found");
-  }
-
-  const tag = await tagsModel.getTagById(tagId);
-  if (!tag) {
-    throw new Error("Tag not found");
-  }
-
   const existingRelation = await tagsModel.findSnippetTag(snippetId, tagId);
+
   if (existingRelation) {
-    throw new Error("Tag is already linked to this snippet");
+    throw new Error("This tag is already connected to the snippet");
   }
 
-  await tagsModel.addTagToSnippet(snippetId, tagId);
+  return await tagsModel.addTagToSnippet(snippetId, tagId);
+};
 
-  const tags = await tagsModel.getTagsBySnippetId(snippetId);
-  return tags;
+const removeTagFromSnippet = async (snippetId, tagId) => {
+  const existingRelation = await tagsModel.findSnippetTag(snippetId, tagId);
+
+  if (!existingRelation) {
+    return null;
+  }
+
+  return await tagsModel.removeTagFromSnippet(snippetId, tagId);
 };
 
 module.exports = {
@@ -62,4 +37,5 @@ module.exports = {
   createTag,
   getTagsBySnippetId,
   addTagToSnippet,
+  removeTagFromSnippet,
 };
