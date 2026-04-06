@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { getSnippetById, deleteSnippet } from "../api";
 
 function SnippetDetail() {
@@ -10,7 +12,7 @@ function SnippetDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchSnippet = async () => {
+  const fetchSnippet = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -23,11 +25,11 @@ function SnippetDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchSnippet();
-  }, [id]);
+  }, [fetchSnippet]);
 
   const handleCopy = async () => {
     if (!snippet) return;
@@ -51,6 +53,34 @@ function SnippetDetail() {
     } catch (error) {
       alert(error.message);
     }
+  };
+
+  const getLanguageForHighlight = () => {
+    if (!snippet?.language_name) return "javascript";
+
+    const languageMap = {
+      javascript: "javascript",
+      typescript: "typescript",
+      python: "python",
+      java: "java",
+      c: "c",
+      "c++": "cpp",
+      cpp: "cpp",
+      csharp: "csharp",
+      "c#": "csharp",
+      html: "html",
+      css: "css",
+      json: "json",
+      sql: "sql",
+      kotlin: "kotlin",
+      dart: "dart",
+      jsx: "jsx",
+      tsx: "tsx",
+      bash: "bash",
+    };
+
+    const normalized = snippet.language_name.toLowerCase().trim();
+    return languageMap[normalized] || "javascript";
   };
 
   if (loading) {
@@ -92,9 +122,23 @@ function SnippetDetail() {
           {snippet.description || "설명이 없습니다."}
         </p>
 
-        <pre className="detail-code-block">
-          <code>{snippet.code}</code>
-        </pre>
+        <div className="detail-code-block syntax-wrapper">
+          <SyntaxHighlighter
+            language={getLanguageForHighlight()}
+            style={oneDark}
+            customStyle={{
+              margin: 0,
+              padding: "20px",
+              borderRadius: "16px",
+              background: "transparent",
+              fontSize: "14px",
+            }}
+            wrapLongLines={true}
+            showLineNumbers={true}
+          >
+            {snippet.code || ""}
+          </SyntaxHighlighter>
+        </div>
 
         <div className="snippet-actions">
           <button onClick={handleCopy}>복사</button>

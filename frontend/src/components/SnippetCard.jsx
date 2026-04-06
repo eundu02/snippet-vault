@@ -1,5 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 function SnippetCard({ snippet }) {
   const handleCopy = async () => {
@@ -9,6 +11,34 @@ function SnippetCard({ snippet }) {
     } catch (error) {
       alert("복사에 실패했습니다.");
     }
+  };
+
+  const getLanguageForHighlight = () => {
+    if (!snippet.language_name) return "javascript";
+
+    const languageMap = {
+      javascript: "javascript",
+      typescript: "typescript",
+      python: "python",
+      java: "java",
+      c: "c",
+      "c++": "cpp",
+      cpp: "cpp",
+      csharp: "csharp",
+      "c#": "csharp",
+      html: "html",
+      css: "css",
+      json: "json",
+      sql: "sql",
+      kotlin: "kotlin",
+      dart: "dart",
+      jsx: "jsx",
+      tsx: "tsx",
+      bash: "bash",
+    };
+
+    const normalized = snippet.language_name.toLowerCase().trim();
+    return languageMap[normalized] || "javascript";
   };
 
   return (
@@ -39,9 +69,23 @@ function SnippetCard({ snippet }) {
         {snippet.description || "설명이 없습니다."}
       </p>
 
-      <pre className="snippet-code-block">
-        <code>{snippet.code}</code>
-      </pre>
+      <div className="snippet-code-block syntax-wrapper">
+        <SyntaxHighlighter
+          language={getLanguageForHighlight()}
+          style={oneDark}
+          customStyle={{
+            margin: 0,
+            padding: "18px",
+            borderRadius: "16px",
+            background: "transparent",
+            fontSize: "14px",
+          }}
+          wrapLongLines={true}
+          showLineNumbers={false}
+        >
+          {snippet.code || ""}
+        </SyntaxHighlighter>
+      </div>
 
       <div className="snippet-actions">
         <button onClick={handleCopy}>복사</button>

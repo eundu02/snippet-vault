@@ -451,3 +451,15 @@ button:disabled {
   font-weight: 600;
   color: #374151;
 }
+.syntax-wrapper {
+  overflow: hidden;
+}
+
+.syntax-wrapper pre {
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+.syntax-wrapper code {
+  font-family: "Fira Code", Consolas, monospace;
+}
