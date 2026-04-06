@@ -5,6 +5,8 @@ import {
   getTags,
   createTag,
   deleteTag,
+  createLanguage,
+  deleteLanguage,
   createSnippet,
   addTagToSnippet,
 } from "../api";
@@ -12,6 +14,7 @@ import {
 function SnippetCreate() {
   const navigate = useNavigate();
 
+  const [newLanguageName, setNewLanguageName] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [code, setCode] = useState("");
@@ -57,6 +60,49 @@ function SnippetCreate() {
         ? prev.filter((id) => id !== tagId)
         : [...prev, tagId]
     );
+  };
+
+  const handleDeleteLanguage = async (id, name) => {
+    const confirmed = window.confirm(
+      `정말 "${name}" 언어를 삭제하시겠습니까?`
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteLanguage(id);
+
+      setLanguages((prev) => prev.filter((language) => language.id !== id));
+
+      if (String(languageId) === String(id)) {
+        setLanguageId("");
+      }
+
+      alert("언어가 삭제되었습니다.");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleCreateLanguage = async () => {
+    if (!newLanguageName.trim()) {
+      alert("새 언어 이름을 입력하세요.");
+      return;
+    }
+
+    try {
+      const result = await createLanguage({ name: newLanguageName.trim() });
+      const createdLanguage = result.data;
+
+      if (createdLanguage) {
+        setLanguages((prev) => [...prev, createdLanguage]);
+        setLanguageId(String(createdLanguage.id));
+      }
+
+      setNewLanguageName("");
+      alert("언어가 추가되었습니다.");
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   const handleCreateTag = async () => {
@@ -190,6 +236,43 @@ function SnippetCreate() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="form-group">
+          <label>언어 관리</label>
+
+          <div className="tag-create-row">
+            <input
+              type="text"
+              value={newLanguageName}
+              placeholder="예: TypeScript"
+              onChange={(e) => setNewLanguageName(e.target.value)}
+            />
+            <button type="button" onClick={handleCreateLanguage}>
+              언어 추가
+            </button>
+          </div>
+
+          {languages.length === 0 ? (
+            <div className="empty-state section-spacing">언어가 없습니다.</div>
+          ) : (
+            <div className="tag-manage-list section-spacing">
+              {languages.map((language) => (
+                <div key={language.id} className="tag-manage-item">
+                  <span className="language-manage-name">{language.name}</span>
+                  <button
+                    type="button"
+                    className="tag-delete-button"
+                    onClick={() =>
+                      handleDeleteLanguage(language.id, language.name)
+                    }
+                  >
+                    삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="form-group">

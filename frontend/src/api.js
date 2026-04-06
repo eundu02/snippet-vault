@@ -92,3 +92,16 @@ export const deleteTag = async (tagId) => {
     method: "DELETE",
   });
 };
+
+export const createLanguage = async (languageData) => {
+  return request("/languages", {
+    method: "POST",
+    body: JSON.stringify(languageData),
+  });
+};
+
+export const deleteLanguage = async (languageId) => {
+  return request(`/languages/${languageId}`, {
+    method: "DELETE",
+  });
+};  

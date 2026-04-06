@@ -50,7 +50,8 @@ function Home() {
       <div className="home-header">
         <h1 className="home-title">Snippet Vault</h1>
         <Link to="/snippets/create">
-          <button>스니펫 추가</button>
+          <button>스니펫 관리
+          </button>
         </Link>
       </div>
 

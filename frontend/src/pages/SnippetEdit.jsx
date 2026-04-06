@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getSnippetById,
@@ -6,6 +6,8 @@ import {
   getTags,
   createTag,
   deleteTag,
+  createLanguage,
+  deleteLanguage,
   updateSnippet,
   addTagToSnippet,
   removeTagFromSnippet,
@@ -22,19 +24,20 @@ function SnippetEdit() {
 
   const [languages, setLanguages] = useState([]);
   const [tags, setTags] = useState([]);
-
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [originalTagIds, setOriginalTagIds] = useState([]);
 
   const [newTagName, setNewTagName] = useState("");
+  const [newLanguageName, setNewLanguageName] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchInitialData = async () => {
+  const fetchInitialData = useCallback(async () => {
     try {
       setLoading(true);
+      setError("");
 
       const [snippetResult, languagesResult, tagsResult] = await Promise.all([
         getSnippetById(id),
@@ -47,31 +50,30 @@ function SnippetEdit() {
       setTitle(snippet.title || "");
       setDescription(snippet.description || "");
       setCode(snippet.code || "");
-      setLanguageId(snippet.language_id || "");
+      setLanguageId(snippet.language_id ? String(snippet.language_id) : "");
 
       setLanguages(languagesResult.data || []);
       setTags(tagsResult.data || []);
 
       const existingTags = (snippet.tags || []).map((tag) => tag.id);
-
       setSelectedTagIds(existingTags);
       setOriginalTagIds(existingTags);
     } catch (error) {
-      console.error(error);
+      console.error("Failed to load snippet edit data:", error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchInitialData();
-  }, [id]);
+  }, [fetchInitialData]);
 
   const handleTagToggle = (tagId) => {
     setSelectedTagIds((prev) =>
       prev.includes(tagId)
-        ? prev.filter((t) => t !== tagId)
+        ? prev.filter((item) => item !== tagId)
         : [...prev, tagId]
     );
   };
@@ -86,10 +88,12 @@ function SnippetEdit() {
       const result = await createTag({ name: newTagName.trim() });
       const createdTag = result.data;
 
-      setTags((prev) => [...prev, createdTag]);
-      setSelectedTagIds((prev) =>
-        prev.includes(createdTag.id) ? prev : [...prev, createdTag.id]
-      );
+      if (createdTag) {
+        setTags((prev) => [...prev, createdTag]);
+        setSelectedTagIds((prev) =>
+          prev.includes(createdTag.id) ? prev : [...prev, createdTag.id]
+        );
+      }
 
       setNewTagName("");
     } catch (error) {
@@ -117,15 +121,64 @@ function SnippetEdit() {
     }
   };
 
+  const handleCreateLanguage = async () => {
+    if (!newLanguageName.trim()) {
+      alert("새 언어 이름을 입력하세요.");
+      return;
+    }
+
+    try {
+      const result = await createLanguage({ name: newLanguageName.trim() });
+      const createdLanguage = result.data;
+
+      if (createdLanguage) {
+        setLanguages((prev) => [...prev, createdLanguage]);
+        setLanguageId(String(createdLanguage.id));
+      }
+
+      setNewLanguageName("");
+      alert("언어가 추가되었습니다.");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleDeleteLanguage = async (id, name) => {
+    const confirmed = window.confirm(
+      `정말 "${name}" 언어를 삭제하시겠습니까?`
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteLanguage(id);
+
+      setLanguages((prev) => prev.filter((language) => language.id !== id));
+
+      if (String(languageId) === String(id)) {
+        setLanguageId("");
+      }
+
+      alert("언어가 삭제되었습니다.");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!title.trim() || !code.trim() || !languageId) {
+      alert("제목, 코드, 언어는 필수입니다.");
+      return;
+    }
+
     try {
       setSaving(true);
+      setError("");
 
       await updateSnippet(id, {
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         code,
         language_id: Number(languageId),
       });
@@ -149,7 +202,7 @@ function SnippetEdit() {
       alert("수정되었습니다.");
       navigate(`/snippets/${id}`);
     } catch (error) {
-      console.error(error);
+      console.error("Failed to update snippet:", error);
       setError(error.message);
     } finally {
       setSaving(false);
@@ -204,6 +257,43 @@ function SnippetEdit() {
         </div>
 
         <div className="form-group">
+          <label>언어 관리</label>
+
+          <div className="tag-create-row">
+            <input
+              type="text"
+              value={newLanguageName}
+              placeholder="예: TypeScript"
+              onChange={(e) => setNewLanguageName(e.target.value)}
+            />
+            <button type="button" onClick={handleCreateLanguage}>
+              언어 추가
+            </button>
+          </div>
+
+          {languages.length === 0 ? (
+            <div className="empty-state section-spacing">언어가 없습니다.</div>
+          ) : (
+            <div className="tag-manage-list section-spacing">
+              {languages.map((language) => (
+                <div key={language.id} className="tag-manage-item">
+                  <span className="language-manage-name">{language.name}</span>
+                  <button
+                    type="button"
+                    className="tag-delete-button"
+                    onClick={() =>
+                      handleDeleteLanguage(language.id, language.name)
+                    }
+                  >
+                    삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="form-group">
           <label>태그 선택 / 관리</label>
 
           {tags.length === 0 ? (
@@ -240,7 +330,7 @@ function SnippetEdit() {
           <div className="tag-create-row">
             <input
               value={newTagName}
-              placeholder="새 태그"
+              placeholder="예: API"
               onChange={(e) => setNewTagName(e.target.value)}
             />
 
