@@ -126,25 +126,13 @@
 # 3. 설계
 
 ## 3.1 시스템 아키텍처
+<img width="380" height="971" alt="mermaid-diagram (3)" src="https://github.com/user-attachments/assets/4a815ee9-55fb-4c51-b829-146155b0673d" />
 
+설명
+- React는 사용자 인터페이스를 제공한다.
+- Express 서버는 REST API를 제공한다.
+- SQLite는 데이터 저장을 담당한다.
 
-```mermaid
-flowchart TD
-
-User[User]
-
-React[React Frontend]
-
-API[REST API]
-
-Server[Node.js / Express]
-
-DB[(SQLite Database)]
-
-User --> React
-React --> API
-API --> Server
-Server --> DB
 
 ## 3.2 ERD 다이어그램
 ![snippet-vault erd](https://github.com/user-attachments/assets/d0f6ab54-8152-48b3-826f-b216fbbf4266)
