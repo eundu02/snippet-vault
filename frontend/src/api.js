@@ -80,3 +80,9 @@ export const addTagToSnippet = async (snippetId, tagId) => {
     body: JSON.stringify({ tag_id: tagId }),
   });
 };
+
+export const removeTagFromSnippet = async (snippetId, tagId) => {
+  return request(`/snippets/${snippetId}/tags/${tagId}`, {
+    method: "DELETE",
+  });
+};
