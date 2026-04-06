@@ -353,7 +353,3 @@ Snippet-Vault 시스템은 개발자가 자주 사용하는 코드 조각을 저
 - 코드 공유 기능  
 
 ---
-
-# GitHub
-
-https://github.com/eundu02/snippet-vault
