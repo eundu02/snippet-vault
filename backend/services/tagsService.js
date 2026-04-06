@@ -8,6 +8,17 @@ const createTag = async (name) => {
   return await tagsModel.createTag(name);
 };
 
+const deleteTag = async (tagId) => {
+  const existingTag = await tagsModel.findTagById(tagId);
+
+  if (!existingTag) {
+    return null;
+  }
+
+  await tagsModel.deleteSnippetTagRelationsByTagId(tagId);
+  return await tagsModel.deleteTag(tagId);
+};
+
 const getTagsBySnippetId = async (snippetId) => {
   return await tagsModel.getTagsBySnippetId(snippetId);
 };
@@ -35,7 +46,8 @@ const removeTagFromSnippet = async (snippetId, tagId) => {
 module.exports = {
   getAllTags,
   createTag,
+  deleteTag,
   getTagsBySnippetId,
   addTagToSnippet,
   removeTagFromSnippet,
-};
+};  

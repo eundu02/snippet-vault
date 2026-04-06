@@ -25,6 +25,22 @@ const createTag = async (req, res) => {
   }
 };
 
+const deleteTag = async (req, res) => {
+  try {
+    const tagId = req.params.id;
+
+    const deletedTag = await tagsService.deleteTag(tagId);
+
+    if (!deletedTag) {
+      return errorResponse(res, "Tag not found", 404);
+    }
+
+    return successResponse(res, "Tag deleted successfully", deletedTag);
+  } catch (error) {
+    return errorResponse(res, "Failed to delete tag");
+  }
+};
+
 const getTagsBySnippetId = async (req, res) => {
   try {
     const snippetId = req.params.id;
@@ -71,6 +87,7 @@ const removeTagFromSnippet = async (req, res) => {
 module.exports = {
   getAllTags,
   createTag,
+  deleteTag,
   getTagsBySnippetId,
   addTagToSnippet,
   removeTagFromSnippet,

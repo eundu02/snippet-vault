@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getSnippetById,
   getLanguages,
   getTags,
   createTag,
+  deleteTag,
+  createLanguage,
+  deleteLanguage,
   updateSnippet,
   addTagToSnippet,
+  removeTagFromSnippet,
 } from "../api";
 
 function SnippetEdit() {
@@ -22,13 +26,15 @@ function SnippetEdit() {
   const [tags, setTags] = useState([]);
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [originalTagIds, setOriginalTagIds] = useState([]);
+
   const [newTagName, setNewTagName] = useState("");
+  const [newLanguageName, setNewLanguageName] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchInitialData = async () => {
+  const fetchInitialData = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -40,31 +46,29 @@ function SnippetEdit() {
       ]);
 
       const snippet = snippetResult.data;
-      const languageList = languagesResult.data || [];
-      const tagList = tagsResult.data || [];
 
       setTitle(snippet.title || "");
       setDescription(snippet.description || "");
       setCode(snippet.code || "");
       setLanguageId(snippet.language_id ? String(snippet.language_id) : "");
 
-      const existingTagIds = (snippet.tags || []).map((tag) => tag.id);
+      setLanguages(languagesResult.data || []);
+      setTags(tagsResult.data || []);
 
-      setSelectedTagIds(existingTagIds);
-      setOriginalTagIds(existingTagIds);
-
-      setLanguages(languageList);
-      setTags(tagList);
+      const existingTags = (snippet.tags || []).map((tag) => tag.id);
+      setSelectedTagIds(existingTags);
+      setOriginalTagIds(existingTags);
     } catch (error) {
+      console.error("Failed to load snippet edit data:", error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchInitialData();
-  }, [id]);
+  }, [fetchInitialData]);
 
   const handleTagToggle = (tagId) => {
     setSelectedTagIds((prev) =>
@@ -89,12 +93,72 @@ function SnippetEdit() {
         setSelectedTagIds((prev) =>
           prev.includes(createdTag.id) ? prev : [...prev, createdTag.id]
         );
-      } else {
-        const tagsResult = await getTags();
-        setTags(tagsResult.data || []);
       }
 
       setNewTagName("");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleDeleteTag = async (tagId, tagName) => {
+    const confirmed = window.confirm(
+      `정말 "${tagName}" 태그를 삭제하시겠습니까?\n연결된 스니펫에서도 함께 제거됩니다.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteTag(tagId);
+
+      setTags((prev) => prev.filter((tag) => tag.id !== tagId));
+      setSelectedTagIds((prev) => prev.filter((id) => id !== tagId));
+      setOriginalTagIds((prev) => prev.filter((id) => id !== tagId));
+
+      alert("태그가 삭제되었습니다.");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleCreateLanguage = async () => {
+    if (!newLanguageName.trim()) {
+      alert("새 언어 이름을 입력하세요.");
+      return;
+    }
+
+    try {
+      const result = await createLanguage({ name: newLanguageName.trim() });
+      const createdLanguage = result.data;
+
+      if (createdLanguage) {
+        setLanguages((prev) => [...prev, createdLanguage]);
+        setLanguageId(String(createdLanguage.id));
+      }
+
+      setNewLanguageName("");
+      alert("언어가 추가되었습니다.");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleDeleteLanguage = async (id, name) => {
+    const confirmed = window.confirm(
+      `정말 "${name}" 언어를 삭제하시겠습니까?`
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteLanguage(id);
+
+      setLanguages((prev) => prev.filter((language) => language.id !== id));
+
+      if (String(languageId) === String(id)) {
+        setLanguageId("");
+      }
+
+      alert("언어가 삭제되었습니다.");
     } catch (error) {
       alert(error.message);
     }
@@ -113,23 +177,32 @@ function SnippetEdit() {
       setError("");
 
       await updateSnippet(id, {
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         code,
         language_id: Number(languageId),
       });
 
-      const addedTagIds = selectedTagIds.filter(
+      const addedTags = selectedTagIds.filter(
         (tagId) => !originalTagIds.includes(tagId)
       );
 
-      for (const tagId of addedTagIds) {
+      const removedTags = originalTagIds.filter(
+        (tagId) => !selectedTagIds.includes(tagId)
+      );
+
+      for (const tagId of addedTags) {
         await addTagToSnippet(id, tagId);
       }
 
-      alert("스니펫이 수정되었습니다.\n현재는 태그 추가만 가능하고 제거는 아직 백엔드 API가 필요합니다.");
+      for (const tagId of removedTags) {
+        await removeTagFromSnippet(id, tagId);
+      }
+
+      alert("수정되었습니다.");
       navigate(`/snippets/${id}`);
     } catch (error) {
+      console.error("Failed to update snippet:", error);
       setError(error.message);
     } finally {
       setSaving(false);
@@ -137,54 +210,42 @@ function SnippetEdit() {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px" }}>로딩 중...</div>;
+    return <div className="page-container">로딩 중...</div>;
   }
 
   return (
-    <div style={{ padding: "24px" }}>
-      <h1>스니펫 수정</h1>
+    <div className="page-container">
+      <h1 className="form-page-title">스니펫 수정</h1>
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "16px" }}>
+      <form onSubmit={handleSubmit} className="snippet-form">
+        <div className="form-group">
           <label>제목</label>
-          <br />
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            style={{ width: "100%", padding: "8px" }}
-          />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
 
-        <div style={{ marginBottom: "16px" }}>
+        <div className="form-group">
           <label>설명</label>
-          <br />
           <textarea
+            rows="4"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            rows="4"
-            style={{ width: "100%", padding: "8px" }}
           />
         </div>
 
-        <div style={{ marginBottom: "16px" }}>
+        <div className="form-group">
           <label>코드</label>
-          <br />
           <textarea
+            rows="10"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            rows="10"
-            style={{ width: "100%", padding: "8px" }}
           />
         </div>
 
-        <div style={{ marginBottom: "16px" }}>
+        <div className="form-group">
           <label>언어</label>
-          <br />
           <select
             value={languageId}
             onChange={(e) => setLanguageId(e.target.value)}
-            style={{ width: "100%", padding: "8px" }}
           >
             <option value="">언어 선택</option>
             {languages.map((language) => (
@@ -195,52 +256,94 @@ function SnippetEdit() {
           </select>
         </div>
 
-        <div style={{ marginBottom: "16px" }}>
-          <label>태그 선택</label>
-          <div style={{ marginTop: "8px" }}>
-            {tags.map((tag) => (
-              <label
-                key={tag.id}
-                style={{
-                  display: "inline-block",
-                  marginRight: "12px",
-                  marginBottom: "8px",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedTagIds.includes(tag.id)}
-                  onChange={() => handleTagToggle(tag.id)}
-                />{" "}
-                {tag.name}
-              </label>
-            ))}
-          </div>
-          <p style={{ fontSize: "13px", color: "#666" }}>
-            현재 백엔드에는 태그 제거 API가 없어서, 체크 해제해도 기존 태그는 실제 삭제되지 않습니다.
-          </p>
-        </div>
+        <div className="form-group">
+          <label>언어 관리</label>
 
-        <div style={{ marginBottom: "16px" }}>
-          <label>새 태그 만들기</label>
-          <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+          <div className="tag-create-row">
             <input
               type="text"
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
-              placeholder="예: API"
-              style={{ flex: 1, padding: "8px" }}
+              value={newLanguageName}
+              placeholder="예: TypeScript"
+              onChange={(e) => setNewLanguageName(e.target.value)}
             />
+            <button type="button" onClick={handleCreateLanguage}>
+              언어 추가
+            </button>
+          </div>
+
+          {languages.length === 0 ? (
+            <div className="empty-state section-spacing">언어가 없습니다.</div>
+          ) : (
+            <div className="tag-manage-list section-spacing">
+              {languages.map((language) => (
+                <div key={language.id} className="tag-manage-item">
+                  <span className="language-manage-name">{language.name}</span>
+                  <button
+                    type="button"
+                    className="tag-delete-button"
+                    onClick={() =>
+                      handleDeleteLanguage(language.id, language.name)
+                    }
+                  >
+                    삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="form-group">
+          <label>태그 선택 / 관리</label>
+
+          {tags.length === 0 ? (
+            <div className="empty-state">태그가 없습니다.</div>
+          ) : (
+            <div className="tag-manage-list">
+              {tags.map((tag) => (
+                <div key={tag.id} className="tag-manage-item">
+                  <label className="tag-checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedTagIds.includes(tag.id)}
+                      onChange={() => handleTagToggle(tag.id)}
+                    />
+                    {tag.name}
+                  </label>
+
+                  <button
+                    type="button"
+                    className="tag-delete-button"
+                    onClick={() => handleDeleteTag(tag.id, tag.name)}
+                  >
+                    삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="form-group">
+          <label>새 태그 만들기</label>
+
+          <div className="tag-create-row">
+            <input
+              value={newTagName}
+              placeholder="예: API"
+              onChange={(e) => setNewTagName(e.target.value)}
+            />
+
             <button type="button" onClick={handleCreateTag}>
               태그 생성
             </button>
           </div>
         </div>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && <p className="error-text">{error}</p>}
 
         <button type="submit" disabled={saving}>
-          {saving ? "수정 중..." : "수정 완료"}
+          {saving ? "저장 중..." : "수정 완료"}
         </button>
       </form>
     </div>
