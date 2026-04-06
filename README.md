@@ -147,6 +147,8 @@
 스니펫 생성 과정
 <img width="2100" height="1238" alt="mermaid-diagram" src="https://github.com/user-attachments/assets/9d0cfe7b-1ef2-46fa-8858-1ead2a8f258d" />
 
+---
+
 스니펫 검색 과정
 <img width="2160" height="1238" alt="mermaid-diagram (1)" src="https://github.com/user-attachments/assets/466495ff-a2cf-49bc-9d4c-c9084039e48f" />
 
