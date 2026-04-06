@@ -31,6 +31,54 @@ const createTag = (name) => {
   });
 };
 
+const findTagById = (tagId) => {
+  return new Promise((resolve, reject) => {
+    const query = `SELECT id, name FROM tags WHERE id = ?`;
+
+    db.get(query, [tagId], (err, row) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(row);
+      }
+    });
+  });
+};
+
+const deleteSnippetTagRelationsByTagId = (tagId) => {
+  return new Promise((resolve, reject) => {
+    const query = `DELETE FROM snippet_tags WHERE tag_id = ?`;
+
+    db.run(query, [tagId], function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({
+          tag_id: Number(tagId),
+          removed_relations: this.changes,
+        });
+      }
+    });
+  });
+};
+
+const deleteTag = (tagId) => {
+  return new Promise((resolve, reject) => {
+    const query = `DELETE FROM tags WHERE id = ?`;
+
+    db.run(query, [tagId], function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({
+          id: Number(tagId),
+          deleted: this.changes > 0,
+        });
+      }
+    });
+  });
+};
+
 const getTagsBySnippetId = (snippetId) => {
   return new Promise((resolve, reject) => {
     const query = `
@@ -114,6 +162,9 @@ const removeTagFromSnippet = (snippetId, tagId) => {
 module.exports = {
   getAllTags,
   createTag,
+  findTagById,
+  deleteSnippetTagRelationsByTagId,
+  deleteTag,
   getTagsBySnippetId,
   findSnippetTag,
   addTagToSnippet,

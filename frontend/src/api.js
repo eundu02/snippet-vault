@@ -80,3 +80,28 @@ export const addTagToSnippet = async (snippetId, tagId) => {
     body: JSON.stringify({ tag_id: tagId }),
   });
 };
+
+export const removeTagFromSnippet = async (snippetId, tagId) => {
+  return request(`/snippets/${snippetId}/tags/${tagId}`, {
+    method: "DELETE",
+  });
+};
+
+export const deleteTag = async (tagId) => {
+  return request(`/tags/${tagId}`, {
+    method: "DELETE",
+  });
+};
+
+export const createLanguage = async (languageData) => {
+  return request("/languages", {
+    method: "POST",
+    body: JSON.stringify(languageData),
+  });
+};
+
+export const deleteLanguage = async (languageId) => {
+  return request(`/languages/${languageId}`, {
+    method: "DELETE",
+  });
+};  

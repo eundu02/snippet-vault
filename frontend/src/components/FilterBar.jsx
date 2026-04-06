@@ -17,7 +17,7 @@ function FilterBar({
     <form className="filter-bar" onSubmit={handleSubmit}>
       <input
         type="text"
-        placeholder="검색어를 입력하세요"
+        placeholder="제목, 코드, 설명으로 검색"
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
       />

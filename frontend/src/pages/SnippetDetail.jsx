@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { getSnippetById, deleteSnippet } from "../api";
 
 function SnippetDetail() {
@@ -10,7 +12,7 @@ function SnippetDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchSnippet = async () => {
+  const fetchSnippet = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -23,11 +25,11 @@ function SnippetDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchSnippet();
-  }, [id]);
+  }, [fetchSnippet]);
 
   const handleCopy = async () => {
     if (!snippet) return;
@@ -53,89 +55,106 @@ function SnippetDetail() {
     }
   };
 
+  const getLanguageForHighlight = () => {
+    if (!snippet?.language_name) return "javascript";
+
+    const languageMap = {
+      javascript: "javascript",
+      typescript: "typescript",
+      python: "python",
+      java: "java",
+      c: "c",
+      "c++": "cpp",
+      cpp: "cpp",
+      csharp: "csharp",
+      "c#": "csharp",
+      html: "html",
+      css: "css",
+      json: "json",
+      sql: "sql",
+      kotlin: "kotlin",
+      dart: "dart",
+      jsx: "jsx",
+      tsx: "tsx",
+      bash: "bash",
+    };
+
+    const normalized = snippet.language_name.toLowerCase().trim();
+    return languageMap[normalized] || "javascript";
+  };
+
   if (loading) {
-    return <div style={{ padding: "24px" }}>로딩 중...</div>;
+    return <div className="page-container">로딩 중...</div>;
   }
 
   if (error) {
-    return (
-      <div style={{ padding: "24px", color: "red" }}>
-        오류: {error}
-      </div>
-    );
+    return <div className="page-container error-text">오류: {error}</div>;
   }
 
   if (!snippet) {
-    return <div style={{ padding: "24px" }}>스니펫이 없습니다.</div>;
+    return <div className="page-container">스니펫이 없습니다.</div>;
   }
 
   return (
-    <div style={{ padding: "24px" }}>
-      <h1>{snippet.title}</h1>
+    <div className="page-container">
+      <div className="detail-card">
+        <h1 className="detail-title">{snippet.title}</h1>
 
-      <div style={{ marginBottom: "12px" }}>
-        <span
-          style={{
-            display: "inline-block",
-            padding: "4px 10px",
-            borderRadius: "12px",
-            backgroundColor: "#eef2ff",
-            fontSize: "13px",
-            marginBottom: "8px",
-          }}
-        >
-          {snippet.language_name || "언어 없음"}
-        </span>
+        <div className="detail-meta">
+          <span className="language-badge">
+            {snippet.language_name || "언어 없음"}
+          </span>
 
-        <div style={{ marginTop: "8px" }}>
-          {snippet.tags && snippet.tags.length > 0 ? (
-            snippet.tags.map((tag) => (
-              <span
-                key={tag.id}
-                style={{
-                  display: "inline-block",
-                  marginRight: "6px",
-                  marginBottom: "6px",
-                  padding: "4px 8px",
-                  borderRadius: "10px",
-                  backgroundColor: "#f3f4f6",
-                  fontSize: "12px",
-                }}
-              >
-                #{tag.name}
-              </span>
-            ))
-          ) : (
-            <span style={{ fontSize: "12px", color: "#888" }}>태그 없음</span>
-          )}
+          <div className="tag-list">
+            {snippet.tags && snippet.tags.length > 0 ? (
+              snippet.tags.map((tag) => (
+                <span key={tag.id} className="tag-badge">
+                  #{tag.name}
+                </span>
+              ))
+            ) : (
+              <span className="tag-empty">태그 없음</span>
+            )}
+          </div>
         </div>
-      </div>
 
-      <p style={{ marginBottom: "16px" }}>{snippet.description}</p>
+        <p className="snippet-description">
+          {snippet.description || "설명이 없습니다."}
+        </p>
 
-      <pre
-        style={{
-          backgroundColor: "#f8f8f8",
-          padding: "16px",
-          borderRadius: "8px",
-          overflowX: "auto",
-        }}
-      >
-        <code>{snippet.code}</code>
-      </pre>
+        <div className="detail-code-block syntax-wrapper">
+          <SyntaxHighlighter
+            language={getLanguageForHighlight()}
+            style={oneDark}
+            customStyle={{
+              margin: 0,
+              padding: "20px",
+              borderRadius: "16px",
+              background: "transparent",
+              fontSize: "14px",
+            }}
+            wrapLongLines={true}
+            showLineNumbers={true}
+          >
+            {snippet.code || ""}
+          </SyntaxHighlighter>
+        </div>
 
-      <div style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
-        <button onClick={handleCopy}>복사</button>
+        <div className="snippet-actions">
+          <button onClick={handleCopy}>복사</button>
 
-        <Link to={`/snippets/${snippet.id}/edit`}>
-          <button>수정</button>
-        </Link>
+          <Link to={`/snippets/${snippet.id}/edit`}>
+            <button>수정</button>
+          </Link>
 
-        <button onClick={handleDelete}>삭제</button>
+          <button onClick={handleDelete} className="danger-button">
+            삭제
+          </button>
 
-        <Link to="/">
-          <button>목록으로</button>
-        </Link>
+          <Link to="/">
+            <button>목록으로</button>
+          </Link>
+        </div>
       </div>
     </div>
   );

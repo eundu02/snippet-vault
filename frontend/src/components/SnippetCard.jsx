@@ -1,7 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-function SnippetCard({ snippet, onDelete }) {
+function SnippetCard({ snippet }) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(snippet.code);
@@ -11,77 +13,86 @@ function SnippetCard({ snippet, onDelete }) {
     }
   };
 
-  const handleDelete = () => {
-    const confirmed = window.confirm("정말 삭제하시겠습니까?");
-    if (confirmed) {
-      onDelete(snippet.id);
-    }
+  const getLanguageForHighlight = () => {
+    if (!snippet.language_name) return "javascript";
+
+    const languageMap = {
+      javascript: "javascript",
+      typescript: "typescript",
+      python: "python",
+      java: "java",
+      c: "c",
+      "c++": "cpp",
+      cpp: "cpp",
+      csharp: "csharp",
+      "c#": "csharp",
+      html: "html",
+      css: "css",
+      json: "json",
+      sql: "sql",
+      kotlin: "kotlin",
+      dart: "dart",
+      jsx: "jsx",
+      tsx: "tsx",
+      bash: "bash",
+    };
+
+    const normalized = snippet.language_name.toLowerCase().trim();
+    return languageMap[normalized] || "javascript";
   };
 
   return (
     <div className="snippet-card">
-      <h3>{snippet.title}</h3>
+      <div className="snippet-card-header">
+        <h3 className="snippet-title">{snippet.title}</h3>
+      </div>
 
-      <div style={{ marginBottom: "8px" }}>
-        <span
-          style={{
-            display: "inline-block",
-            padding: "4px 10px",
-            borderRadius: "12px",
-            backgroundColor: "#eef2ff",
-            fontSize: "13px",
-            marginBottom: "8px",
-          }}
-        >
+      <div className="snippet-meta">
+        <span className="language-badge">
           {snippet.language_name || "언어 없음"}
         </span>
 
-        <div style={{ marginTop: "6px" }}>
+        <div className="tag-list">
           {snippet.tags && snippet.tags.length > 0 ? (
             snippet.tags.map((tag) => (
-              <span
-                key={tag.id}
-                style={{
-                  display: "inline-block",
-                  marginRight: "6px",
-                  marginBottom: "6px",
-                  padding: "4px 8px",
-                  borderRadius: "10px",
-                  backgroundColor: "#f3f4f6",
-                  fontSize: "12px",
-                }}
-              >
+              <span key={tag.id} className="tag-badge">
                 #{tag.name}
               </span>
             ))
           ) : (
-            <span style={{ fontSize: "12px", color: "#888" }}>태그 없음</span>
+            <span className="tag-empty">태그 없음</span>
           )}
         </div>
       </div>
 
-      <p>{snippet.description}</p>
+      <p className="snippet-description">
+        {snippet.description || "설명이 없습니다."}
+      </p>
 
-      <pre
-        style={{
-          backgroundColor: "#f8f8f8",
-          padding: "12px",
-          borderRadius: "8px",
-          overflowX: "auto",
-        }}
-      >
-        <code>{snippet.code}</code>
-      </pre>
+      <div className="snippet-code-block syntax-wrapper">
+        <SyntaxHighlighter
+          language={getLanguageForHighlight()}
+          style={oneDark}
+          customStyle={{
+            margin: 0,
+            padding: "18px",
+            borderRadius: "16px",
+            background: "transparent",
+            fontSize: "14px",
+          }}
+          wrapLongLines={true}
+          showLineNumbers={false}
+        >
+          {snippet.code || ""}
+        </SyntaxHighlighter>
+      </div>
 
-      <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
+      <div className="snippet-actions">
         <button onClick={handleCopy}>복사</button>
+
         <Link to={`/snippets/${snippet.id}`}>
           <button>상세보기</button>
         </Link>
-        <Link to={`/snippets/${snippet.id}/edit`}>
-          <button>수정</button>
-        </Link>
-        <button onClick={handleDelete}>삭제</button>
       </div>
     </div>
   );
