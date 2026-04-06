@@ -210,21 +210,74 @@
 
 ---
 
+## 4.3 주요 화면 구현
+
+### 홈 화면 (스니펫 목록)
+
+홈 화면에서는 저장된 스니펫 목록을 확인할 수 있으며,
+검색 기능과 언어 필터를 통해 원하는 스니펫을 빠르게 찾을 수 있다.
+
+![화면 캡처 2026-04-07 004720](https://github.com/user-attachments/assets/0000ce2f-0c69-4a3b-8014-ab987421e391)
+
+### 스니펫 생성 화면
+
+사용자는 제목, 코드, 설명을 입력하여 새로운 스니펫을 생성할 수 있다.
+또한 언어를 선택하고 태그를 추가할 수 있다.
+
+![화면 캡처 2026-04-07 004826](https://github.com/user-attachments/assets/8654623c-2475-4eb2-88c2-87cd0870d31e)
+![화면 캡처 2026-04-07 004848](https://github.com/user-attachments/assets/1328ecd3-d59a-413e-af0c-ee29e9cefcf0)
+
+### 스니펫 상세 화면
+
+스니펫 상세 화면에서는 코드 하이라이팅이 적용된 코드 내용을 확인할 수 있으며,
+코드 복사 기능과 수정 및 삭제 기능을 사용할 수 있다.
+![화면 캡처 2026-04-07 004918](https://github.com/user-attachments/assets/1ed7866e-e768-4fba-9d9b-508c6da5cc73)
+
+### 스니펫 수정 화면
+스니펫 수정 화면에서는 기존에 저장된 스니펫 정보를 불러와 수정할 수 있다.  
+사용자는 제목, 코드, 설명을 수정할 수 있으며 언어 변경 및 태그 수정도 가능하다.
+수정 화면에서는 기존 데이터가 자동으로 입력되어 있어 사용자가 필요한 부분만 변경할 수 있도록 설계하였다.
+
+![화면 캡처 2026-04-07 004958](https://github.com/user-attachments/assets/cd5afefd-e7f2-4b69-9acd-4d2e16fbb728)
+![화면 캡처 2026-04-07 005011](https://github.com/user-attachments/assets/1df4e043-3770-4d0b-90f1-c170734edcf8)
+
 # 5. 실험
 
 ## 5.1 테스트 데이터
 
-### 예시 스니펫
-React useEffect example
+Search: [              ]
 
-### 태그
-React
-API
-JavaScript
+Language Filter: [All ▼]
+
+-------------------------------------
+
+React useEffect example
+Language: JavaScript
+Tags: React | Hook | Frontend
+Description: React에서 데이터 fetch하는 useEffect 예제
+
+-------------------------------------
+
+Express REST API Example
+Language: JavaScript
+Tags: Node.js | Express | API
+Description: 간단한 REST API 서버
+
+-------------------------------------
+
+Python 리스트 컴프리헨션
+Language: Python
+Tags: Python | Algorithm
+Description: 리스트 컴프리헨션 예제
 
 ---
+## 5.2 API 테스트 (Postman)
+Postman을 이용하여 REST API가 정상적으로 동작하는지 테스트하였다.
+![snippet 생성](https://github.com/user-attachments/assets/0ad4bab4-1248-4f3f-a830-8fbed88f7d9f)
+![단일 조회](https://github.com/user-attachments/assets/b2c6e788-c77e-40e6-8801-c7de1447a50e)
+![삭제](https://github.com/user-attachments/assets/57c74bc6-b586-4422-a980-c65aecfe9c1e)
 
-## 5.2 테스트 결과
+## 5.3 테스트 결과
 
 | 기능 | 결과 |
 |-----|------|
@@ -283,3 +336,7 @@ Snippet-Vault 시스템은 개발자가 자주 사용하는 코드 조각을 저
 - 사용자 로그인 시스템
 - 클라우드 배포
 - 코드 공유 기능
+
+# GitHub
+
+https://github.com/eundu02/snippet-vault
