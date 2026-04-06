@@ -5,6 +5,7 @@ import {
   getLanguages,
   getTags,
   createTag,
+  deleteTag,
   updateSnippet,
   addTagToSnippet,
   removeTagFromSnippet,
@@ -35,12 +36,11 @@ function SnippetEdit() {
     try {
       setLoading(true);
 
-      const [snippetResult, languagesResult, tagsResult] =
-        await Promise.all([
-          getSnippetById(id),
-          getLanguages(),
-          getTags(),
-        ]);
+      const [snippetResult, languagesResult, tagsResult] = await Promise.all([
+        getSnippetById(id),
+        getLanguages(),
+        getTags(),
+      ]);
 
       const snippet = snippetResult.data;
 
@@ -56,7 +56,6 @@ function SnippetEdit() {
 
       setSelectedTagIds(existingTags);
       setOriginalTagIds(existingTags);
-
     } catch (error) {
       console.error(error);
       setError(error.message);
@@ -78,16 +77,41 @@ function SnippetEdit() {
   };
 
   const handleCreateTag = async () => {
-    if (!newTagName.trim()) return;
+    if (!newTagName.trim()) {
+      alert("새 태그 이름을 입력하세요.");
+      return;
+    }
 
     try {
       const result = await createTag({ name: newTagName.trim() });
       const createdTag = result.data;
 
       setTags((prev) => [...prev, createdTag]);
-      setSelectedTagIds((prev) => [...prev, createdTag.id]);
+      setSelectedTagIds((prev) =>
+        prev.includes(createdTag.id) ? prev : [...prev, createdTag.id]
+      );
 
       setNewTagName("");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleDeleteTag = async (tagId, tagName) => {
+    const confirmed = window.confirm(
+      `정말 "${tagName}" 태그를 삭제하시겠습니까?\n연결된 스니펫에서도 함께 제거됩니다.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteTag(tagId);
+
+      setTags((prev) => prev.filter((tag) => tag.id !== tagId));
+      setSelectedTagIds((prev) => prev.filter((id) => id !== tagId));
+      setOriginalTagIds((prev) => prev.filter((id) => id !== tagId));
+
+      alert("태그가 삭제되었습니다.");
     } catch (error) {
       alert(error.message);
     }
@@ -124,7 +148,6 @@ function SnippetEdit() {
 
       alert("수정되었습니다.");
       navigate(`/snippets/${id}`);
-
     } catch (error) {
       console.error(error);
       setError(error.message);
@@ -139,17 +162,12 @@ function SnippetEdit() {
 
   return (
     <div className="page-container">
-
       <h1 className="form-page-title">스니펫 수정</h1>
 
       <form onSubmit={handleSubmit} className="snippet-form">
-
         <div className="form-group">
           <label>제목</label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
 
         <div className="form-group">
@@ -186,19 +204,34 @@ function SnippetEdit() {
         </div>
 
         <div className="form-group">
-          <label>태그 선택</label>
-          <div className="tag-checkbox-group">
-            {tags.map((tag) => (
-              <label key={tag.id} className="tag-checkbox-item">
-                <input
-                  type="checkbox"
-                  checked={selectedTagIds.includes(tag.id)}
-                  onChange={() => handleTagToggle(tag.id)}
-                />
-                {tag.name}
-              </label>
-            ))}
-          </div>
+          <label>태그 선택 / 관리</label>
+
+          {tags.length === 0 ? (
+            <div className="empty-state">태그가 없습니다.</div>
+          ) : (
+            <div className="tag-manage-list">
+              {tags.map((tag) => (
+                <div key={tag.id} className="tag-manage-item">
+                  <label className="tag-checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedTagIds.includes(tag.id)}
+                      onChange={() => handleTagToggle(tag.id)}
+                    />
+                    {tag.name}
+                  </label>
+
+                  <button
+                    type="button"
+                    className="tag-delete-button"
+                    onClick={() => handleDeleteTag(tag.id, tag.name)}
+                  >
+                    삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="form-group">
@@ -222,7 +255,6 @@ function SnippetEdit() {
         <button type="submit" disabled={saving}>
           {saving ? "저장 중..." : "수정 완료"}
         </button>
-
       </form>
     </div>
   );

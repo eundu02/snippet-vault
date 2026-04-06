@@ -4,6 +4,7 @@ import {
   getLanguages,
   getTags,
   createTag,
+  deleteTag,
   createSnippet,
   addTagToSnippet,
 } from "../api";
@@ -81,6 +82,25 @@ function SnippetCreate() {
     }
   };
 
+  const handleDeleteTag = async (tagId, tagName) => {
+    const confirmed = window.confirm(
+      `정말 "${tagName}" 태그를 삭제하시겠습니까?\n연결된 스니펫에서도 함께 제거됩니다.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteTag(tagId);
+
+      setTags((prev) => prev.filter((tag) => tag.id !== tagId));
+      setSelectedTagIds((prev) => prev.filter((id) => id !== tagId));
+
+      alert("태그가 삭제되었습니다.");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -127,7 +147,6 @@ function SnippetCreate() {
       <h1 className="form-page-title">스니펫 생성</h1>
 
       <form onSubmit={handleSubmit} className="snippet-form">
-
         <div className="form-group">
           <label>제목</label>
           <input
@@ -174,19 +193,34 @@ function SnippetCreate() {
         </div>
 
         <div className="form-group">
-          <label>태그 선택</label>
-          <div className="tag-checkbox-group">
-            {tags.map((tag) => (
-              <label key={tag.id} className="tag-checkbox-item">
-                <input
-                  type="checkbox"
-                  checked={selectedTagIds.includes(tag.id)}
-                  onChange={() => handleTagToggle(tag.id)}
-                />
-                {tag.name}
-              </label>
-            ))}
-          </div>
+          <label>태그 선택 / 관리</label>
+
+          {tags.length === 0 ? (
+            <div className="empty-state">태그가 없습니다.</div>
+          ) : (
+            <div className="tag-manage-list">
+              {tags.map((tag) => (
+                <div key={tag.id} className="tag-manage-item">
+                  <label className="tag-checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedTagIds.includes(tag.id)}
+                      onChange={() => handleTagToggle(tag.id)}
+                    />
+                    {tag.name}
+                  </label>
+
+                  <button
+                    type="button"
+                    className="tag-delete-button"
+                    onClick={() => handleDeleteTag(tag.id, tag.name)}
+                  >
+                    삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="form-group">
@@ -211,7 +245,6 @@ function SnippetCreate() {
         <button type="submit" disabled={loading}>
           {loading ? "생성 중..." : "생성 완료"}
         </button>
-
       </form>
     </div>
   );

@@ -86,3 +86,9 @@ export const removeTagFromSnippet = async (snippetId, tagId) => {
     method: "DELETE",
   });
 };
+
+export const deleteTag = async (tagId) => {
+  return request(`/tags/${tagId}`, {
+    method: "DELETE",
+  });
+};
