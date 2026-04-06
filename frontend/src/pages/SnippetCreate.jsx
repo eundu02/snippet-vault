@@ -1,6 +1,12 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createSnippet, fetchLanguages } from "../api";
+import {
+  getLanguages,
+  getTags,
+  createTag,
+  createSnippet,
+  addTagToSnippet,
+} from "../api";
 
 function SnippetCreate() {
   const navigate = useNavigate();
@@ -11,41 +17,68 @@ function SnippetCreate() {
   const [languageId, setLanguageId] = useState("");
 
   const [languages, setLanguages] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
+  const [newTagName, setNewTagName] = useState("");
+
   const [loading, setLoading] = useState(false);
-  const [languageLoading, setLanguageLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const loadLanguages = async () => {
-      try {
-        setLanguageLoading(true);
-        const data = await fetchLanguages();
-        setLanguages(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLanguageLoading(false);
-      }
-    };
+  const fetchInitialData = async () => {
+    try {
+      const [languagesResult, tagsResult] = await Promise.all([
+        getLanguages(),
+        getTags(),
+      ]);
 
-    loadLanguages();
+      setLanguages(languagesResult.data || []);
+      setTags(tagsResult.data || []);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchInitialData();
   }, []);
+
+  const handleTagToggle = (tagId) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
+
+  const handleCreateTag = async () => {
+    if (!newTagName.trim()) {
+      alert("새 태그 이름을 입력하세요.");
+      return;
+    }
+
+    try {
+      const result = await createTag({ name: newTagName.trim() });
+      const createdTag = result.data;
+
+      if (createdTag) {
+        setTags((prev) => [...prev, createdTag]);
+        setSelectedTagIds((prev) => [...prev, createdTag.id]);
+      } else {
+        const tagsResult = await getTags();
+        setTags(tagsResult.data || []);
+      }
+
+      setNewTagName("");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title.trim()) {
-      alert("제목을 입력해주세요.");
-      return;
-    }
-
-    if (!code.trim()) {
-      alert("코드를 입력해주세요.");
-      return;
-    }
-
-    if (!languageId) {
-      alert("언어를 선택해주세요.");
+    if (!title.trim() || !code.trim() || !languageId) {
+      alert("제목, 코드, 언어는 필수입니다.");
       return;
     }
 
@@ -53,115 +86,134 @@ function SnippetCreate() {
       setLoading(true);
       setError("");
 
-      const createdSnippet = await createSnippet({
-        title: title.trim(),
-        description: description.trim(),
+      const snippetResult = await createSnippet({
+        title,
+        description,
         code,
         language_id: Number(languageId),
       });
 
-      alert("스니펫이 등록되었습니다.");
-      navigate(`/snippets/${createdSnippet.id}`);
-    } catch (err) {
-      setError(err.message);
+      const createdSnippet = snippetResult.data;
+
+      if (createdSnippet && createdSnippet.id) {
+        for (const tagId of selectedTagIds) {
+          await addTagToSnippet(createdSnippet.id, tagId);
+        }
+      }
+
+      alert("스니펫이 생성되었습니다.");
+      navigate("/");
+    } catch (error) {
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMoveBack = () => {
-    navigate("/");
-  };
-
   return (
-    <div className="app-container">
-      <div className="detail-top-bar">
-        <button
-          type="button"
-          className="secondary-btn"
-          onClick={handleMoveBack}
-        >
-          목록으로
-        </button>
-      </div>
+    <div style={{ padding: "24px" }}>
+      <h1>스니펫 생성</h1>
 
-      <div className="form-card">
-        <div className="detail-header">
-          <h1>스니펫 추가</h1>
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: "16px" }}>
+          <label>제목</label>
+          <br />
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            style={{ width: "100%", padding: "8px" }}
+          />
         </div>
 
-        {error && <div className="error-box">{error}</div>}
+        <div style={{ marginBottom: "16px" }}>
+          <label>설명</label>
+          <br />
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows="4"
+            style={{ width: "100%", padding: "8px" }}
+          />
+        </div>
 
-        <form className="snippet-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="title">제목</label>
+        <div style={{ marginBottom: "16px" }}>
+          <label>코드</label>
+          <br />
+          <textarea
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            rows="10"
+            style={{ width: "100%", padding: "8px" }}
+          />
+        </div>
+
+        <div style={{ marginBottom: "16px" }}>
+          <label>언어</label>
+          <br />
+          <select
+            value={languageId}
+            onChange={(e) => setLanguageId(e.target.value)}
+            style={{ width: "100%", padding: "8px" }}
+          >
+            <option value="">언어 선택</option>
+            {languages.map((language) => (
+              <option key={language.id} value={language.id}>
+                {language.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ marginBottom: "16px" }}>
+          <label>태그 선택</label>
+          <div style={{ marginTop: "8px" }}>
+            {tags.length === 0 ? (
+              <p>태그가 없습니다.</p>
+            ) : (
+              tags.map((tag) => (
+                <label
+                  key={tag.id}
+                  style={{
+                    display: "inline-block",
+                    marginRight: "12px",
+                    marginBottom: "8px",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedTagIds.includes(tag.id)}
+                    onChange={() => handleTagToggle(tag.id)}
+                  />{" "}
+                  {tag.name}
+                </label>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "16px" }}>
+          <label>새 태그 만들기</label>
+          <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
             <input
-              id="title"
               type="text"
-              placeholder="예: Java Scanner 입력"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={loading}
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              placeholder="예: React"
+              style={{ flex: 1, padding: "8px" }}
             />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="language">언어</label>
-            <select
-              id="language"
-              value={languageId}
-              onChange={(e) => setLanguageId(e.target.value)}
-              disabled={loading || languageLoading}
-            >
-              <option value="">언어를 선택하세요</option>
-              {languages.map((language) => (
-                <option key={language.id} value={language.id}>
-                  {language.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="description">설명</label>
-            <textarea
-              id="description"
-              rows="4"
-              placeholder="스니펫에 대한 간단한 설명을 입력하세요"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="code">코드</label>
-            <textarea
-              id="code"
-              rows="12"
-              placeholder="코드를 입력하세요"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-
-          <div className="form-actions">
-            <button
-              type="button"
-              className="secondary-btn"
-              onClick={handleMoveBack}
-              disabled={loading}
-            >
-              취소
-            </button>
-
-            <button type="submit" disabled={loading}>
-              {loading ? "저장 중..." : "저장"}
+            <button type="button" onClick={handleCreateTag}>
+              태그 생성
             </button>
           </div>
-        </form>
-      </div>
+        </div>
+
+        {error && <p style={{ color: "red" }}>{error}</p>}
+
+        <button type="submit" disabled={loading}>
+          {loading ? "생성 중..." : "생성하기"}
+        </button>
+      </form>
     </div>
   );
 }

@@ -1,98 +1,82 @@
 const BASE_URL = "http://localhost:5000";
 
-export const fetchSnippets = async ({ keyword = "", languageId = "" } = {}) => {
-  const query = new URLSearchParams();
-
-  if (keyword.trim()) {
-    query.append("keyword", keyword.trim());
-  }
-
-  if (languageId) {
-    query.append("language_id", languageId);
-  }
-
-  const url = query.toString()
-    ? `${BASE_URL}/snippets?${query.toString()}`
-    : `${BASE_URL}/snippets`;
-
-  const response = await fetch(url);
-  const result = await response.json();
-
-  if (!response.ok || !result.success) {
-    throw new Error(result.message || "Failed to fetch snippets");
-  }
-
-  return Array.isArray(result.data) ? result.data : [];
-};
-
-export const fetchLanguages = async () => {
-  const response = await fetch(`${BASE_URL}/languages`);
-  const result = await response.json();
-
-  if (!response.ok || !result.success) {
-    throw new Error(result.message || "Failed to fetch languages");
-  }
-
-  return Array.isArray(result.data) ? result.data : [];
-};
-
-export const fetchSnippetById = async (id) => {
-  const response = await fetch(`${BASE_URL}/snippets/${id}`);
-  const result = await response.json();
-
-  if (!response.ok || !result.success) {
-    throw new Error(result.message || "Failed to fetch snippet detail");
-  }
-
-  return result.data;
-};
-
-export const deleteSnippetById = async (id) => {
-  const response = await fetch(`${BASE_URL}/snippets/${id}`, {
-    method: "DELETE",
+async function request(url, options = {}) {
+  const response = await fetch(`${BASE_URL}${url}`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    ...options,
   });
 
   const result = await response.json();
 
-  if (!response.ok || !result.success) {
-    throw new Error(result.message || "Failed to delete snippet");
+  if (!response.ok || result.success === false) {
+    throw new Error(result.message || "Request failed");
   }
 
   return result;
+}
+
+// snippets
+export const getSnippets = async (keyword = "", languageId = "") => {
+  const query = new URLSearchParams();
+
+  if (keyword) query.append("keyword", keyword);
+  if (languageId) query.append("language_id", languageId);
+
+  const url = query.toString() ? `/snippets?${query.toString()}` : "/snippets";
+  return request(url);
 };
 
-export const createSnippet = async (payload) => {
-  const response = await fetch(`${BASE_URL}/snippets`, {
+export const getSnippetById = async (id) => {
+  return request(`/snippets/${id}`);
+};
+
+export const createSnippet = async (snippetData) => {
+  return request("/snippets", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(snippetData),
   });
-
-  const result = await response.json();
-
-  if (!response.ok || !result.success) {
-    throw new Error(result.message || "Failed to create snippet");
-  }
-
-  return result.data;
 };
 
-export const updateSnippetById = async (id, payload) => {
-  const response = await fetch(`${BASE_URL}/snippets/${id}`, {
+export const updateSnippet = async (id, snippetData) => {
+  return request(`/snippets/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(snippetData),
   });
+};
 
-  const result = await response.json();
+export const deleteSnippet = async (id) => {
+  return request(`/snippets/${id}`, {
+    method: "DELETE",
+  });
+};
 
-  if (!response.ok || !result.success) {
-    throw new Error(result.message || "Failed to update snippet");
-  }
+// languages
+export const getLanguages = async () => {
+  return request("/languages");
+};
 
-  return result.data;
+// tags
+export const getTags = async () => {
+  return request("/tags");
+};
+
+export const createTag = async (tagData) => {
+  return request("/tags", {
+    method: "POST",
+    body: JSON.stringify(tagData),
+  });
+};
+
+// snippet-tags
+export const getSnippetTags = async (snippetId) => {
+  return request(`/snippets/${snippetId}/tags`);
+};
+
+export const addTagToSnippet = async (snippetId, tagId) => {
+  return request(`/snippets/${snippetId}/tags`, {
+    method: "POST",
+    body: JSON.stringify({ tag_id: tagId }),
+  });
 };
