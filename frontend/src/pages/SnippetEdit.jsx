@@ -21,8 +21,10 @@ function SnippetEdit() {
 
   const [languages, setLanguages] = useState([]);
   const [tags, setTags] = useState([]);
+
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [originalTagIds, setOriginalTagIds] = useState([]);
+
   const [newTagName, setNewTagName] = useState("");
 
   const [loading, setLoading] = useState(true);
@@ -32,30 +34,31 @@ function SnippetEdit() {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      setError("");
 
-      const [snippetResult, languagesResult, tagsResult] = await Promise.all([
-        getSnippetById(id),
-        getLanguages(),
-        getTags(),
-      ]);
+      const [snippetResult, languagesResult, tagsResult] =
+        await Promise.all([
+          getSnippetById(id),
+          getLanguages(),
+          getTags(),
+        ]);
 
       const snippet = snippetResult.data;
-      const languageList = languagesResult.data || [];
-      const tagList = tagsResult.data || [];
 
       setTitle(snippet.title || "");
       setDescription(snippet.description || "");
       setCode(snippet.code || "");
-      setLanguageId(snippet.language_id ? String(snippet.language_id) : "");
-      setLanguages(languageList);
-      setTags(tagList);
+      setLanguageId(snippet.language_id || "");
 
-      const existingTagIds = (snippet.tags || []).map((tag) => tag.id);
-      setSelectedTagIds(existingTagIds);
-      setOriginalTagIds(existingTagIds);
+      setLanguages(languagesResult.data || []);
+      setTags(tagsResult.data || []);
+
+      const existingTags = (snippet.tags || []).map((tag) => tag.id);
+
+      setSelectedTagIds(existingTags);
+      setOriginalTagIds(existingTags);
+
     } catch (error) {
-      console.error("Failed to load snippet edit data:", error);
+      console.error(error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -69,25 +72,21 @@ function SnippetEdit() {
   const handleTagToggle = (tagId) => {
     setSelectedTagIds((prev) =>
       prev.includes(tagId)
-        ? prev.filter((item) => item !== tagId)
+        ? prev.filter((t) => t !== tagId)
         : [...prev, tagId]
     );
   };
 
   const handleCreateTag = async () => {
-    if (!newTagName.trim()) {
-      alert("새 태그 이름을 입력하세요.");
-      return;
-    }
+    if (!newTagName.trim()) return;
 
     try {
       const result = await createTag({ name: newTagName.trim() });
       const createdTag = result.data;
 
       setTags((prev) => [...prev, createdTag]);
-      setSelectedTagIds((prev) =>
-        prev.includes(createdTag.id) ? prev : [...prev, createdTag.id]
-      );
+      setSelectedTagIds((prev) => [...prev, createdTag.id]);
+
       setNewTagName("");
     } catch (error) {
       alert(error.message);
@@ -97,14 +96,8 @@ function SnippetEdit() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title.trim() || !code.trim() || !languageId) {
-      alert("제목, 코드, 언어는 필수입니다.");
-      return;
-    }
-
     try {
       setSaving(true);
-      setError("");
 
       await updateSnippet(id, {
         title,
@@ -113,26 +106,27 @@ function SnippetEdit() {
         language_id: Number(languageId),
       });
 
-      const addedTagIds = selectedTagIds.filter(
+      const addedTags = selectedTagIds.filter(
         (tagId) => !originalTagIds.includes(tagId)
       );
 
-      const removedTagIds = originalTagIds.filter(
+      const removedTags = originalTagIds.filter(
         (tagId) => !selectedTagIds.includes(tagId)
       );
 
-      for (const tagId of addedTagIds) {
+      for (const tagId of addedTags) {
         await addTagToSnippet(id, tagId);
       }
 
-      for (const tagId of removedTagIds) {
+      for (const tagId of removedTags) {
         await removeTagFromSnippet(id, tagId);
       }
 
-      alert("스니펫이 수정되었습니다.");
+      alert("수정되었습니다.");
       navigate(`/snippets/${id}`);
+
     } catch (error) {
-      console.error("Failed to update snippet:", error);
+      console.error(error);
       setError(error.message);
     } finally {
       setSaving(false);
@@ -140,18 +134,19 @@ function SnippetEdit() {
   };
 
   if (loading) {
-    return <div>로딩 중...</div>;
+    return <div className="page-container">로딩 중...</div>;
   }
 
   return (
     <div className="page-container">
-      <h1>스니펫 수정</h1>
+
+      <h1 className="form-page-title">스니펫 수정</h1>
 
       <form onSubmit={handleSubmit} className="snippet-form">
+
         <div className="form-group">
           <label>제목</label>
           <input
-            type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -160,18 +155,18 @@ function SnippetEdit() {
         <div className="form-group">
           <label>설명</label>
           <textarea
+            rows="4"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            rows="4"
           />
         </div>
 
         <div className="form-group">
           <label>코드</label>
           <textarea
+            rows="10"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            rows="10"
           />
         </div>
 
@@ -193,32 +188,29 @@ function SnippetEdit() {
         <div className="form-group">
           <label>태그 선택</label>
           <div className="tag-checkbox-group">
-            {tags.length === 0 ? (
-              <p>태그가 없습니다.</p>
-            ) : (
-              tags.map((tag) => (
-                <label key={tag.id} className="tag-checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={selectedTagIds.includes(tag.id)}
-                    onChange={() => handleTagToggle(tag.id)}
-                  />
-                  {tag.name}
-                </label>
-              ))
-            )}
+            {tags.map((tag) => (
+              <label key={tag.id} className="tag-checkbox-item">
+                <input
+                  type="checkbox"
+                  checked={selectedTagIds.includes(tag.id)}
+                  onChange={() => handleTagToggle(tag.id)}
+                />
+                {tag.name}
+              </label>
+            ))}
           </div>
         </div>
 
         <div className="form-group">
           <label>새 태그 만들기</label>
+
           <div className="tag-create-row">
             <input
-              type="text"
               value={newTagName}
+              placeholder="새 태그"
               onChange={(e) => setNewTagName(e.target.value)}
-              placeholder="예: API"
             />
+
             <button type="button" onClick={handleCreateTag}>
               태그 생성
             </button>
@@ -228,8 +220,9 @@ function SnippetEdit() {
         {error && <p className="error-text">{error}</p>}
 
         <button type="submit" disabled={saving}>
-          {saving ? "수정 중..." : "수정 완료"}
+          {saving ? "저장 중..." : "수정 완료"}
         </button>
+
       </form>
     </div>
   );

@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import SnippetCreate from "./pages/SnippetCreate";
 import SnippetDetail from "./pages/SnippetDetail";
 import SnippetEdit from "./pages/SnippetEdit";
+import "./App.css";
 
 function App() {
   return (

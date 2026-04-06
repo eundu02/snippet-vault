@@ -19,6 +19,7 @@ function SnippetCreate() {
   const [languages, setLanguages] = useState([]);
   const [tags, setTags] = useState([]);
   const [selectedTagIds, setSelectedTagIds] = useState([]);
+
   const [newTagName, setNewTagName] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -118,21 +119,22 @@ function SnippetCreate() {
   };
 
   if (pageLoading) {
-    return <div>로딩 중...</div>;
+    return <div className="page-container">로딩 중...</div>;
   }
 
   return (
     <div className="page-container">
-      <h1>스니펫 생성</h1>
+      <h1 className="form-page-title">스니펫 생성</h1>
 
       <form onSubmit={handleSubmit} className="snippet-form">
+
         <div className="form-group">
           <label>제목</label>
           <input
             type="text"
             value={title}
+            placeholder="예: React useEffect 예제"
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="예: React useEffect 기본 예제"
           />
         </div>
 
@@ -140,9 +142,9 @@ function SnippetCreate() {
           <label>설명</label>
           <textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
             rows="4"
-            placeholder="스니펫 설명을 입력하세요"
+            placeholder="코드 설명"
+            onChange={(e) => setDescription(e.target.value)}
           />
         </div>
 
@@ -150,9 +152,9 @@ function SnippetCreate() {
           <label>코드</label>
           <textarea
             value={code}
-            onChange={(e) => setCode(e.target.value)}
             rows="10"
             placeholder="코드를 입력하세요"
+            onChange={(e) => setCode(e.target.value)}
           />
         </div>
 
@@ -174,32 +176,30 @@ function SnippetCreate() {
         <div className="form-group">
           <label>태그 선택</label>
           <div className="tag-checkbox-group">
-            {tags.length === 0 ? (
-              <p>태그가 없습니다.</p>
-            ) : (
-              tags.map((tag) => (
-                <label key={tag.id} className="tag-checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={selectedTagIds.includes(tag.id)}
-                    onChange={() => handleTagToggle(tag.id)}
-                  />
-                  {tag.name}
-                </label>
-              ))
-            )}
+            {tags.map((tag) => (
+              <label key={tag.id} className="tag-checkbox-item">
+                <input
+                  type="checkbox"
+                  checked={selectedTagIds.includes(tag.id)}
+                  onChange={() => handleTagToggle(tag.id)}
+                />
+                {tag.name}
+              </label>
+            ))}
           </div>
         </div>
 
         <div className="form-group">
           <label>새 태그 만들기</label>
+
           <div className="tag-create-row">
             <input
               type="text"
               value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
               placeholder="예: API"
+              onChange={(e) => setNewTagName(e.target.value)}
             />
+
             <button type="button" onClick={handleCreateTag}>
               태그 생성
             </button>
@@ -211,6 +211,7 @@ function SnippetCreate() {
         <button type="submit" disabled={loading}>
           {loading ? "생성 중..." : "생성 완료"}
         </button>
+
       </form>
     </div>
   );

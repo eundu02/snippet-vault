@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-function SnippetCard({ snippet, onDelete }) {
+function SnippetCard({ snippet }) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(snippet.code);
@@ -11,77 +11,44 @@ function SnippetCard({ snippet, onDelete }) {
     }
   };
 
-  const handleDelete = () => {
-    const confirmed = window.confirm("정말 삭제하시겠습니까?");
-    if (confirmed) {
-      onDelete(snippet.id);
-    }
-  };
-
   return (
     <div className="snippet-card">
-      <h3>{snippet.title}</h3>
+      <div className="snippet-card-header">
+        <h3 className="snippet-title">{snippet.title}</h3>
+      </div>
 
-      <div style={{ marginBottom: "8px" }}>
-        <span
-          style={{
-            display: "inline-block",
-            padding: "4px 10px",
-            borderRadius: "12px",
-            backgroundColor: "#eef2ff",
-            fontSize: "13px",
-            marginBottom: "8px",
-          }}
-        >
+      <div className="snippet-meta">
+        <span className="language-badge">
           {snippet.language_name || "언어 없음"}
         </span>
 
-        <div style={{ marginTop: "6px" }}>
+        <div className="tag-list">
           {snippet.tags && snippet.tags.length > 0 ? (
             snippet.tags.map((tag) => (
-              <span
-                key={tag.id}
-                style={{
-                  display: "inline-block",
-                  marginRight: "6px",
-                  marginBottom: "6px",
-                  padding: "4px 8px",
-                  borderRadius: "10px",
-                  backgroundColor: "#f3f4f6",
-                  fontSize: "12px",
-                }}
-              >
+              <span key={tag.id} className="tag-badge">
                 #{tag.name}
               </span>
             ))
           ) : (
-            <span style={{ fontSize: "12px", color: "#888" }}>태그 없음</span>
+            <span className="tag-empty">태그 없음</span>
           )}
         </div>
       </div>
 
-      <p>{snippet.description}</p>
+      <p className="snippet-description">
+        {snippet.description || "설명이 없습니다."}
+      </p>
 
-      <pre
-        style={{
-          backgroundColor: "#f8f8f8",
-          padding: "12px",
-          borderRadius: "8px",
-          overflowX: "auto",
-        }}
-      >
+      <pre className="snippet-code-block">
         <code>{snippet.code}</code>
       </pre>
 
-      <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
+      <div className="snippet-actions">
         <button onClick={handleCopy}>복사</button>
+
         <Link to={`/snippets/${snippet.id}`}>
           <button>상세보기</button>
         </Link>
-        <Link to={`/snippets/${snippet.id}/edit`}>
-          <button>수정</button>
-        </Link>
-        <button onClick={handleDelete}>삭제</button>
       </div>
     </div>
   );
