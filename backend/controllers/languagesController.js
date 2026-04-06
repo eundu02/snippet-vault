@@ -4,16 +4,10 @@ const { successResponse, errorResponse } = require("../utils/response");
 const getAllLanguages = async (req, res) => {
   try {
     const languages = await languagesService.getAllLanguages();
-
-    return successResponse(
-      res,
-      200,
-      languages,
-      "Languages fetched successfully"
-    );
+    return successResponse(res, "Languages fetched successfully", languages);
   } catch (error) {
     console.error("GET /languages error:", error.message);
-    return errorResponse(res, 500, "Failed to fetch languages");
+    return errorResponse(res, "Failed to fetch languages", 500);
   }
 };
 

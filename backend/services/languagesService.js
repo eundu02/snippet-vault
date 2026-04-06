@@ -1,7 +1,8 @@
 const languagesModel = require("../models/languagesModel");
 
 const getAllLanguages = async () => {
-  return await languagesModel.getAllLanguages();
+  const languages = await languagesModel.getAllLanguages();
+  return languages;
 };
 
 module.exports = {
